@@ -1,18 +1,26 @@
 package com.dwidi.nasaasteroidsapi.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class AsteroidDTO {
     private String id;
     private String name;
-    private double absoluteMagnitude;
-    private double estimatedDiameterMin;
-    private double estimatedDiameterMax;
-    private double missDistanceKilometers;
-    private boolean isPotentiallyHazardousAsteroid;
+    private Double absoluteMagnitude;
+    private Double estimatedDiameterMin;
+    private Double estimatedDiameterMax;
+    private Double missDistanceKilometers;
+    private Boolean isPotentiallyHazardousAsteroid;
+
+    public AsteroidDTO(String id, String name, Double absoluteMagnitude, Double estimatedDiameterMin, Double estimatedDiameterMax, Double missDistanceKilometers, Boolean isPotentiallyHazardousAsteroid) {
+        this.id = id;
+        this.name = name;
+        this.absoluteMagnitude = absoluteMagnitude;
+        this.estimatedDiameterMin = estimatedDiameterMin;
+        this.estimatedDiameterMax = estimatedDiameterMax;
+        this.missDistanceKilometers = missDistanceKilometers;
+        this.isPotentiallyHazardousAsteroid = isPotentiallyHazardousAsteroid;
+    }
 }

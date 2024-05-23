@@ -2,6 +2,7 @@ package com.dwidi.nasaasteroidsapi.exception;
 
 import com.dwidi.nasaasteroidsapi.dto.ExceptionResponseDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,5 +35,17 @@ public class GlobalExceptionHandler {
                 "Asteroid not found with the provided ID"
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionResponseDTO<String>> handleBadRequest(BadRequestException e, WebRequest request) {
+        String path = request.getDescription(false);
+        log.error("An error occurred at path: {}", path, e);
+        ExceptionResponseDTO<String> response = new ExceptionResponseDTO<>(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                "End date must be 7 days after start_date"
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }

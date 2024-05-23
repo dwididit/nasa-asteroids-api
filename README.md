@@ -80,7 +80,7 @@ The application will start and run on http://localhost:8080.
 - Method: GET
 - Request Body:
   - startDate (string): The start date of the range in yyyy-MM-dd format. 
-  - endDate (string): The end date of the range in yyyy-MM-dd format.
+  - endDate (string): The end date of the range in yyyy-MM-dd format. Maximum 7 days after startDate.
 - Response:
   - 200 OK: The top 10 closest asteroids within the specified date range. 
   - 400 Bad Request: If the request is malformed. 
@@ -148,7 +148,7 @@ GET /asteroids/3542519
 Example Response:
 ```json
 {
-  "asteroid": [
+  "asteroidModel": [
     {
       "id": "3542519",
       "name": "(2010 PK9)",
@@ -194,13 +194,40 @@ Example Response:
 }
 ```
 
+### Database Storage of Top 10 Closest Asteroids
+- URL: /asteroids/store-top10?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+- Method: POST
+- Path Parameter:
+  - startDate (string): The start date of the range in yyyy-MM-dd format.
+  - endDate (string): The end date of the range in yyyy-MM-dd format. Maximum 7 days after startDate.
+- Response:
+  - 200 OK: The top 10 closest asteroids within the specified date range.
+  - 400 Bad Request: If the request is malformed.
+  - 500 Internal Server Error: For any other errors.
+
+
+Example Request:
+```bash
+GET /asteroids/store-top10?startDate=2023-05-10&endDate=2023-05-17
+```
+
+
+Example Response:
+```json
+{
+  "status": 200,
+  "message": "Successfully saved top 10 closest asteroids to the database",
+  "details": "Your database is updated"
+}
+```
+
 
 ## Exception Handling
 
 The application uses a global exception handler to return structured error responses.
 
 ### Custom Exceptions
-- AsteroidNotFoundException: Thrown when an asteroid with the specified ID is not found.
+- AsteroidNotFoundException: Thrown when an asteroidModel with the specified ID is not found.
 
 ### Global Exception Handler
 - Handles all exceptions and returns structured JSON responses.

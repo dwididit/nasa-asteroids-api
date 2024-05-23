@@ -1,12 +1,14 @@
 package com.dwidi.nasaasteroidsapi.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class AsteroidResponseDTO {
     private List<AsteroidDTO> asteroid;
 }

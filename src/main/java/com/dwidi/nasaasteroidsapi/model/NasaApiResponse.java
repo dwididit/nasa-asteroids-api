@@ -11,5 +11,5 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NasaApiResponse {
-    private Map<String, List<Asteroid>> near_earth_objects;
+    private Map<String, List<AsteroidModel>> near_earth_objects;
 }
