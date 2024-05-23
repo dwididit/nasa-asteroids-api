@@ -35,5 +35,11 @@ public class AsteroidController {
         CountResponseDTO countResponse = asteroidService.countAsteroidsByMinDistance(distanceRequest.getDistance());
         return ResponseEntity.ok(countResponse);
     }
+
+    @PostMapping("/store-top10")
+    public ResponseEntity<ExceptionResponseDTO<String>> storeTop10Asteroids(@RequestParam String startDate, @RequestParam String endDate) {
+        ExceptionResponseDTO<String> response = asteroidService.saveTop10ClosestAsteroids(startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
 }
 

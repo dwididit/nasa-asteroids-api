@@ -1,13 +1,15 @@
 package com.dwidi.nasaasteroidsapi.service;
 
-import com.dwidi.nasaasteroidsapi.dto.AsteroidDTO;
-import com.dwidi.nasaasteroidsapi.dto.CountResponseDTO;
-import com.dwidi.nasaasteroidsapi.dto.TopAsteroidsResponseDTO;
+import com.dwidi.nasaasteroidsapi.dto.*;
+import com.dwidi.nasaasteroidsapi.entity.AsteroidEntity;
 import com.dwidi.nasaasteroidsapi.exception.AsteroidNotFoundException;
-import com.dwidi.nasaasteroidsapi.model.Asteroid;
+import com.dwidi.nasaasteroidsapi.exception.BadRequestException;
+import com.dwidi.nasaasteroidsapi.model.AsteroidModel;
 import com.dwidi.nasaasteroidsapi.model.CloseApproachData;
 import com.dwidi.nasaasteroidsapi.model.NasaApiResponse;
 import com.dwidi.nasaasteroidsapi.model.NasaApiResponseFilter;
+import com.dwidi.nasaasteroidsapi.repository.AsteroidRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class AsteroidService {
 
@@ -33,34 +36,76 @@ public class AsteroidService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private AsteroidRepository asteroidRepository;
+
     public TopAsteroidsResponseDTO getTop10ClosestAsteroids(String startDate, String endDate) {
         String url = String.format("%s/neo/rest/v1/feed?start_date=%s&end_date=%s&api_key=%s", apiUrl, startDate, endDate, apiKey);
-        ResponseEntity<NasaApiResponse> response = restTemplate.getForEntity(url, NasaApiResponse.class);
+        log.info("Get top 10 closest asteroids from URL: {}, from {} to {}", url, startDate, endDate);
+        try {
+            ResponseEntity<NasaApiResponse> response = restTemplate.getForEntity(url, NasaApiResponse.class);
 
-        Map<String, List<Asteroid>> nearEarthObjects = Objects.requireNonNull(response.getBody()).getNear_earth_objects();
+            if (response.getBody() == null) {
+                throw new BadRequestException("Bad request");
+            }
 
-        List<AsteroidDTO> allAsteroids = nearEarthObjects.values().stream()
-                .flatMap(List::stream)
-                .map(this::convertToDto)
-                .sorted(Comparator.comparingDouble(AsteroidDTO::getMissDistanceKilometers))
-                .limit(10)
-                .collect(Collectors.toList());
+            Map<String, List<AsteroidModel>> nearEarthObjects = response.getBody().getNear_earth_objects();
 
-        return new TopAsteroidsResponseDTO(allAsteroids);
+            List<AsteroidDTO> allAsteroids = nearEarthObjects.values().stream()
+                    .flatMap(List::stream)
+                    .map(this::convertToDto)
+                    .sorted(Comparator.comparingDouble(AsteroidDTO::getMissDistanceKilometers))
+                    .limit(10)
+                    .collect(Collectors.toList());
+
+            return new TopAsteroidsResponseDTO(allAsteroids);
+        } catch (Exception e) {
+            log.error("Unexpected error: {}", e.getMessage());
+            throw new BadRequestException("Bad request, end date must be 7 days after start date");
+        }
+    }
+
+    public ExceptionResponseDTO<String> saveTop10ClosestAsteroids(String startDate, String endDate) {
+        log.info("Saving top 10 closest asteroids to the database for date range: {} to {}", startDate, endDate);
+        try {
+            TopAsteroidsResponseDTO topAsteroidsResponse = getTop10ClosestAsteroids(startDate, endDate);
+
+            List<AsteroidEntity> asteroidEntities = topAsteroidsResponse.getAsteroids().stream()
+                    .map(this::convertToEntity)
+                    .collect(Collectors.toList());
+
+            asteroidRepository.saveAll(asteroidEntities);
+            log.info("Successfully saved top 10 closest asteroids to the database");
+
+            ExceptionResponseDTO<String> response = new ExceptionResponseDTO<>();
+            response.setStatus(200);
+            response.setMessage("Successfully saved top 10 closest asteroids to the database");
+            response.setDetails("Your database is updated");
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("Error saving asteroids to the database: {}", e.getMessage());
+            return new ExceptionResponseDTO<>(
+                    500,
+                    "Error saving asteroids to the database",
+                    "An unexpected error occurred"
+            );
+        }
     }
 
 
     public AsteroidDTO getAsteroidById(String id) {
         String url = String.format("%s/neo/rest/v1/neo/%s?api_key=%s", apiUrl, id, apiKey);
         try {
-            ResponseEntity<Asteroid> response = restTemplate.getForEntity(url, Asteroid.class);
+            ResponseEntity<AsteroidModel> response = restTemplate.getForEntity(url, AsteroidModel.class);
 
             if (response.getBody() == null) {
                 throw new AsteroidNotFoundException("Asteroid with ID " + id + " not found");
             }
 
-            Asteroid asteroid = response.getBody();
-            return convertToDto(asteroid);
+            AsteroidModel asteroidModel = response.getBody();
+            return convertToDto(asteroidModel);
         } catch (HttpClientErrorException.NotFound e) {
             throw new AsteroidNotFoundException("Asteroid with ID " + id + " not found");
         } catch (HttpClientErrorException e) {
@@ -73,9 +118,9 @@ public class AsteroidService {
         ResponseEntity<NasaApiResponseFilter> response = restTemplate.getForEntity(url, NasaApiResponseFilter.class);
 
         long count = Objects.requireNonNull(response.getBody()).getNear_earth_objects().stream()
-                .filter(asteroid -> asteroid.getClose_approach_data() != null && !asteroid.getClose_approach_data().isEmpty())
-                .filter(asteroid -> {
-                    CloseApproachData closestApproach = asteroid.getClose_approach_data().get(0);
+                .filter(asteroidModel -> asteroidModel.getClose_approach_data() != null && !asteroidModel.getClose_approach_data().isEmpty())
+                .filter(asteroidModel -> {
+                    CloseApproachData closestApproach = asteroidModel.getClose_approach_data().getFirst();
                     return Double.parseDouble(closestApproach.getMiss_distance().getKilometers()) >= minDistance;
                 })
                 .count();
@@ -83,19 +128,31 @@ public class AsteroidService {
         return new CountResponseDTO(count);
     }
 
-    private AsteroidDTO convertToDto(Asteroid asteroid) {
-        if (asteroid.getClose_approach_data() == null || asteroid.getClose_approach_data().isEmpty()) {
+    private AsteroidDTO convertToDto(AsteroidModel asteroidModel) {
+        if (asteroidModel.getClose_approach_data() == null || asteroidModel.getClose_approach_data().isEmpty()) {
             throw new IllegalArgumentException("Asteroid does not have close approach data");
         }
-        CloseApproachData closestApproach = asteroid.getClose_approach_data().get(0);
+        CloseApproachData closestApproach = asteroidModel.getClose_approach_data().getFirst();
         return new AsteroidDTO(
-                asteroid.getId(),
-                asteroid.getName(),
-                asteroid.getAbsolute_magnitude_h(),
-                asteroid.getEstimated_diameter().getKilometers().getEstimated_diameter_min(),
-                asteroid.getEstimated_diameter().getKilometers().getEstimated_diameter_max(),
+                asteroidModel.getId(),
+                asteroidModel.getName(),
+                asteroidModel.getAbsolute_magnitude_h(),
+                asteroidModel.getEstimated_diameter().getKilometers().getEstimated_diameter_min(),
+                asteroidModel.getEstimated_diameter().getKilometers().getEstimated_diameter_max(),
                 Double.parseDouble(String.valueOf(closestApproach.getMiss_distance().getKilometers())),
-                asteroid.is_potentially_hazardous_asteroid()
+                asteroidModel.is_potentially_hazardous_asteroid()
         );
+    }
+
+    private AsteroidEntity convertToEntity(AsteroidDTO dto) {
+        AsteroidEntity asteroid = new AsteroidEntity();
+        asteroid.setAsteroidId(String.valueOf(dto.getId()));
+        asteroid.setName(dto.getName());
+        asteroid.setAbsoluteMagnitude(dto.getAbsoluteMagnitude());
+        asteroid.setEstimatedDiameterMin(dto.getEstimatedDiameterMin());
+        asteroid.setEstimatedDiameterMax(dto.getEstimatedDiameterMax());
+        asteroid.setMissDistanceKilometers(dto.getMissDistanceKilometers());
+        asteroid.setPotentiallyHazardousAsteroid(dto.getIsPotentiallyHazardousAsteroid());
+        return asteroid;
     }
 }

@@ -12,5 +12,5 @@ import java.util.Map;
 @NoArgsConstructor
 public class NasaApiResponseFilter {
     private Map<String, String> links;
-    private List<Asteroid> near_earth_objects;
+    private List<AsteroidModel> near_earth_objects;
 }
