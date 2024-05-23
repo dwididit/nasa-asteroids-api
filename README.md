@@ -113,7 +113,15 @@ Example Response:
       "missDistanceKilometers": 6664518.761844655,
       "potentiallyHazardousAsteroid": false
     },
-    // ... other asteroids
+    {
+      "id": "54442111",
+      "name": "(2024 JY16)",
+      "absoluteMagnitude": 25.028,
+      "estimatedDiameterMin": 0.026239465,
+      "estimatedDiameterMax": 0.0586732275,
+      "missDistanceKilometers": 336224.399259631,
+      "potentiallyHazardousAsteroid": false
+    }
   ]
 }
 ```
@@ -157,10 +165,10 @@ Example Response:
 ### Count Asteroids By Minimum Distance
 - URL: /asteroids/count-by-distance
 - Method: GET
-- Request Body::
-  - distance (long): The distance of asteroids in Kilometers.
+- Request Body:
+  - distance (long): The minimum distance of asteroids in Kilometers.
 - Response:
-  - 200 OK: The top 10 closest asteroids within the specified date range.
+  - 200 OK: The count of asteroids within more than specified distance.
   - 400 Bad Request: If the request is malformed.
   - 500 Internal Server Error: For any other errors.
 
