@@ -6,6 +6,7 @@ This project is a Java-based RESTful application that interacts with the NASA As
 
 - Fetch data for top 10 asteroids closest to the earth.
 - Fetch information about a specific asteroid by ID.
+- Database storage of 10 top closet asteroids.
 - Return data in a structured JSON format.
 - Handle errors gracefully with custom exception handling.
 
