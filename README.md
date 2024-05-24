@@ -76,9 +76,9 @@ The application will start and run on http://localhost:8080.
 ## API Endpoints
 
 ### Get Top 10 Closest Asteroids
-- URL: /asteroids/closest
+- URL: /asteroids/closest?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
 - Method: GET
-- Request Body:
+- Path Parameters:
   - startDate (string): The start date of the range in yyyy-MM-dd format. 
   - endDate (string): The end date of the range in yyyy-MM-dd format. Maximum 7 days after startDate.
 - Response:
@@ -89,16 +89,8 @@ The application will start and run on http://localhost:8080.
 
 Example Request:
 ```bash
-GET /asteroids/closest
+GET /asteroids/closest?startDate=2024-05-10&endDate=2024-05-17
 ```
-```json
-{
-  "startDate": "2024-05-01",
-  "endDate": "2024-05-07"
-}
-```
-
-
 
 Example Response:
 ```json
@@ -163,7 +155,7 @@ Example Response:
 ```
 
 ### Count Asteroids By Minimum Distance
-- URL: /asteroids/count-by-distance
+- URL: /asteroids/count-by-distance?distance=minDistance
 - Method: GET
 - Request Body:
   - distance (long): The minimum distance of asteroids in Kilometers.
@@ -175,16 +167,7 @@ Example Response:
 
 Example Request:
 ```bash
-GET /asteroids/count-by-distance
-```
-
-
-
-Example Request:
-```json
-{
-  "distance": 10000000
-}
+GET /asteroids/count-by-distance?distance=1000000
 ```
 
 Example Response:

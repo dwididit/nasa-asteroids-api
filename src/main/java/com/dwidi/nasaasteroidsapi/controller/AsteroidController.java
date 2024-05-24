@@ -18,8 +18,8 @@ public class AsteroidController {
     }
 
     @GetMapping("/closest")
-    public ResponseEntity<TopAsteroidsResponseDTO> getTop10ClosestAsteroids(@RequestBody DateRangeRequestDTO dateRangeRequest) {
-        TopAsteroidsResponseDTO response = asteroidService.getTop10ClosestAsteroids(dateRangeRequest.getStartDate(), dateRangeRequest.getEndDate());
+    public ResponseEntity<TopAsteroidsResponseDTO> getTop10ClosestAsteroids(@RequestParam String startDate, String endDate) {
+        TopAsteroidsResponseDTO response = asteroidService.getTop10ClosestAsteroids(startDate, endDate);
         return ResponseEntity.ok(response);
     }
 
@@ -31,8 +31,8 @@ public class AsteroidController {
     }
 
     @GetMapping("/count-by-distance")
-    public ResponseEntity<CountResponseDTO> countAsteroidsByMinDistance(@RequestBody DistanceRequestDTO distanceRequest) {
-        CountResponseDTO countResponse = asteroidService.countAsteroidsByMinDistance(distanceRequest.getDistance());
+    public ResponseEntity<CountResponseDTO> countAsteroidsByMinDistance(@RequestParam String distance) {
+        CountResponseDTO countResponse = asteroidService.countAsteroidsByMinDistance(Double.parseDouble(distance));
         return ResponseEntity.ok(countResponse);
     }
 
