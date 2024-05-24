@@ -15,12 +15,14 @@ This project is a Java-based RESTful application that interacts with the NASA As
 - Spring Boot
 - Spring Web
 - Lombok
+- PostgreSQL
 - NASA Asteroids NeoWs (Near Earth Object Web Service)
 
 ## Prerequisites
 
 - Java 21 or higher
 - Maven
+- PostgreSQL 16 or later
 - NASA API Key
 
 ## Getting Started
@@ -47,6 +49,14 @@ nasa.api.key=YOUR_NASA_API_KEY
 # Port Configuration
 server.port=8080
 
+# Database configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/nasa_asteroid
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
 # Logging configuration
 logging.level.org.springframework=INFO
 logging.level.root=ERROR
@@ -61,6 +71,12 @@ Replace YOUR_NASA_API_KEY with your actual NASA API key. You can obtain an API k
 
 
 ## Build and Run
+
+Create new database
+```bash
+CREATE DATABASE nasa_asteroid;
+```
+
 
 Use Maven to build and run the application:
 
