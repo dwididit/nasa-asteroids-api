@@ -88,8 +88,8 @@ public class AsteroidService {
             log.error("Error saving asteroids to the database: {}", e.getMessage());
             return new ExceptionResponseDTO<>(
                     500,
-                    "Error saving asteroids to the database",
-                    "An unexpected error occurred"
+                    "Error saving asteroids to the database.",
+                    "End date is maximum 7 days after start date."
             );
         }
     }
