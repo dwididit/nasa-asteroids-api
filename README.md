@@ -17,13 +17,19 @@ This project is a Java-based RESTful application that interacts with the NASA As
 - Lombok
 - PostgreSQL
 - NASA Asteroids NeoWs (Near Earth Object Web Service)
+- Docker
 
 ## Prerequisites
 
 - Java 21 or higher
 - Maven
 - PostgreSQL 16 or later
+- Docker
 - NASA API Key
+
+## Architecture
+
+![Flow Diagram](http://dwidi.dev/wp-content/uploads/2024/05/Vue-Spring.png)
 
 ## Getting Started
 
@@ -87,6 +93,12 @@ java -jar nasa-asteroids-api-0.0.1-SNAPSHOT.jar
 ```
 
 The application will start and run on http://localhost:8080.
+
+## Build and Run Using Docker
+
+```bash
+docker compose up --build -d
+```
 
 
 ## API Endpoints

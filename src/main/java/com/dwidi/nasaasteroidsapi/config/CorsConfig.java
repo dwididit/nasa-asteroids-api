@@ -1,40 +1,34 @@
 package com.dwidi.nasaasteroidsapi.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    @Profile("dev")
-    public CorsFilter devCorsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:8082");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
+    @Value("${allowed.origins}")
+    private String allowedOrigins;
 
     @Bean
-    @Profile("prod")
-    public CorsFilter prodCorsFilter() {
+    public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("https://asteroid.my.id");
+
+        // Add allowed origins from application.properties
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        origins.forEach(config::addAllowedOrigin);
+
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
 }
-
-
