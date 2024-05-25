@@ -36,7 +36,7 @@ This project is a Java-based RESTful application that interacts with the NASA As
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/nasa-asteroids-api.git
+gh repo clone dwididit/nasa-asteroids-api
 cd nasa-asteroids-api
 ```
 
@@ -238,7 +238,7 @@ Example Response:
 The application uses a global exception handler to return structured error responses.
 
 ### Custom Exceptions
-- AsteroidNotFoundException: Thrown when an asteroidModel with the specified ID is not found.
+- AsteroidNotFoundException: Thrown when an asteroid with the specified ID is not found.
 
 ### Global Exception Handler
 - Handles all exceptions and returns structured JSON responses.
