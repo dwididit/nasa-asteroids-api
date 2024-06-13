@@ -12,15 +12,18 @@ import com.dwidi.nasaasteroidsapi.repository.AsteroidRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,17 +42,39 @@ public class AsteroidService {
     @Autowired
     private AsteroidRepository asteroidRepository;
 
+    private static final Pattern DATE_PATTERN = Pattern.compile(("\\d{4}-\\d{2}-\\d{2}"));
+
+    public DateFormatResponseDTO validateDateFormat(String date) {
+        if (!DATE_PATTERN.matcher(date).matches()) {
+            return new DateFormatResponseDTO(400, "Date format should be YYYY-MM-DD");
+        }
+        return null;
+    }
+
     public TopAsteroidsResponseDTO getTop10ClosestAsteroids(String startDate, String endDate) {
+        // Validate date formats
+        DateFormatResponseDTO startDateValidation = validateDateFormat(startDate);
+        DateFormatResponseDTO endDateValidation = validateDateFormat(endDate);
+
+        if (startDateValidation != null) {
+            throw new BadRequestException("Invalid start date: " + startDateValidation.getDetail());
+        }
+
+        if (endDateValidation != null) {
+            throw new BadRequestException("Invalid end date: " + endDateValidation.getDetail());
+        }
+
         String url = String.format("%s/neo/rest/v1/feed?start_date=%s&end_date=%s&api_key=%s", apiUrl, startDate, endDate, apiKey);
         log.info("Get top 10 closest asteroids from URL: {}, from {} to {}", url, startDate, endDate);
+
         try {
             ResponseEntity<NasaApiResponse> response = restTemplate.getForEntity(url, NasaApiResponse.class);
 
-            if (response.getBody() == null) {
+            if (response.getStatusCode() != HttpStatus.OK) {
                 throw new BadRequestException("Bad request");
             }
 
-            Map<String, List<AsteroidModel>> nearEarthObjects = response.getBody().getNear_earth_objects();
+            Map<String, List<AsteroidModel>> nearEarthObjects = Objects.requireNonNull(response.getBody()).getNear_earth_objects();
 
             List<AsteroidDTO> allAsteroids = nearEarthObjects.values().stream()
                     .flatMap(List::stream)
@@ -58,12 +83,18 @@ public class AsteroidService {
                     .limit(10)
                     .collect(Collectors.toList());
 
-            return new TopAsteroidsResponseDTO(allAsteroids);
+            return new TopAsteroidsResponseDTO(allAsteroids, 200, "Success");
+        } catch (RestClientException e) {
+            log.error("RestClientException: {}", e.getMessage());
+            throw new BadRequestException("Error retrieving data from NASA API");
         } catch (Exception e) {
             log.error("Unexpected error: {}", e.getMessage());
-            throw new BadRequestException("Bad request, end date must be 7 days after start date");
+            throw new BadRequestException("An unexpected error occurred: " + e.getMessage());
         }
     }
+
+
+
 
     public ExceptionResponseDTO<String> saveTop10ClosestAsteroids(String startDate, String endDate) {
         log.info("Saving top 10 closest asteroids to the database for date range: {} to {}", startDate, endDate);

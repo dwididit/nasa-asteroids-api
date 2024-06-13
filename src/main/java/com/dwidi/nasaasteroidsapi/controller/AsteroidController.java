@@ -1,7 +1,9 @@
 package com.dwidi.nasaasteroidsapi.controller;
 
 import com.dwidi.nasaasteroidsapi.dto.*;
+import com.dwidi.nasaasteroidsapi.exception.BadRequestException;
 import com.dwidi.nasaasteroidsapi.service.AsteroidService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,17 +13,27 @@ import java.util.Collections;
 @RequestMapping("/asteroids")
 public class AsteroidController {
 
-    private final AsteroidService asteroidService;
+    @Autowired
+    private AsteroidService asteroidService;
 
-    public AsteroidController(AsteroidService asteroidService) {
-        this.asteroidService = asteroidService;
-    }
 
     @GetMapping("/closest")
     public ResponseEntity<TopAsteroidsResponseDTO> getTop10ClosestAsteroids(@RequestParam String startDate, String endDate) {
-        TopAsteroidsResponseDTO response = asteroidService.getTop10ClosestAsteroids(startDate, endDate);
-        return ResponseEntity.ok(response);
+        try {
+            TopAsteroidsResponseDTO response = asteroidService.getTop10ClosestAsteroids(startDate, endDate);
+            return ResponseEntity.ok(response);
+        } catch (BadRequestException e) {
+            // Return an empty list in case of an error with status and detail
+            TopAsteroidsResponseDTO errorResponse = new TopAsteroidsResponseDTO();
+            errorResponse.setAsteroids(Collections.emptyList());
+            errorResponse.setStatus(400);
+            errorResponse.setDetail(e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
     }
+
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<AsteroidResponseDTO> getAsteroidById(@PathVariable String id) {

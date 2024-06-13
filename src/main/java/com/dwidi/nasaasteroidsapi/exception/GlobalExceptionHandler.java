@@ -48,4 +48,16 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(DateFormatException.class)
+    public ResponseEntity<ExceptionResponseDTO<String>> dateFormatException(BadRequestException e, WebRequest request) {
+        String path = request.getDescription(false);
+        log.error("An error occurred at path: {}", path, e);
+        ExceptionResponseDTO<String> response = new ExceptionResponseDTO<>(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                "Date must on format YYYY-MM-DD"
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 }
